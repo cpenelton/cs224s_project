@@ -19,8 +19,7 @@ def new_session():
 @ask.intent("LoginIntent", convert={"username": str})
 def login(username):
     session.attributes['flashcards'] = get_flashcards(username)
-    session.attribute['successes'] = get_statistics(username)
-
+    session.attribute['successes'], session.attribute['failures'] = get_statistics(username)
     return render_question_template('welcome')
 
 
