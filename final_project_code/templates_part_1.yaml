@@ -1,0 +1,8 @@
+welcome: Welcome to the ice cream shop. What is your name?
+
+hello: Hello {{username}}, pleasure to meet you!
+
+hello_enthusiasm: |
+  <speak>
+    <emphasis level="moderate">Hello</emphasis> {{username}}, nice to meet you!
+  </speak>
