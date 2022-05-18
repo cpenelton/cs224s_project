@@ -26,7 +26,7 @@ def new_session():
 def login(username):
     session.attributes['flashcards'] = initialize_flashcards(username)
     session.attributes['statistics'] = initialize_statistics(username)
-    return render_question_template('welcome')
+    return render_question_template('welcome', username=username)
 
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
@@ -86,7 +86,7 @@ def initialize_statistics(username):
         statistics[key] = {
             'successes': 0,
             'failures': 0,
-            'last_time_seen': datetime.max
+            'last_time_seen': str(datetime.max)
         }
     return statistics
 
@@ -101,12 +101,12 @@ def get_flashcard():
 
 def increment_success(flashcard):
     session.attributes['statistics'][flashcard]['success'] += 1
-    session.attributes['statistics'][flashcard]['last_time_seen'] = datetime.now()
+    session.attributes['statistics'][flashcard]['last_time_seen'] = str(datetime.now())
 
 
 def increment_failure(flashcard):
     session.attributes['statistics'][flashcard]['failure'] += 1
-    session.attributes['statistics'][flashcard]['last_time_seen'] = datetime.now()
+    session.attributes['statistics'][flashcard]['last_time_seen'] = str(datetime.now())
 
 
 if __name__ == "__main__":
