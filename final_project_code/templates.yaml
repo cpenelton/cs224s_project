@@ -1,6 +1,6 @@
 login: Welcome to the spanish learning bot! What is your name?
 
-welcome: Hello {{username}}, pleasure to meet you!
+welcome: Hello {{username}}, pleasure to meet you! What would you like to do?
 
 test_vocab: What is {{spanish_word}} in English?
 
