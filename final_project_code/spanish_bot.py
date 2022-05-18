@@ -26,42 +26,43 @@ def new_session():
 def login(username):
     session.attributes['flashcards'] = initialize_flashcards(username)
     session.attributes['statistics'] = initialize_statistics(username)
-    return render_question_template('welcome', username=username)
+    return question(render_template('welcome', username=username))
 
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
 def add_flashcard(english_word, spanish_word):
-    return render_question_template('add_flashcard')
+    # TODO: function to add a flashcard to deck
+    return question(render_template('add_flashcard_complete'))
 
 
 @ask.intent("AskQuestionIntent")
 def ask_question():
     current_card = get_flashcard()
-    session.attribute['current_card'] = current_card
+    session.attributes['current_card'] = current_card
 
-    return render_question_template('test_vocab', spanish_word=current_card[1])
+    return question(render_template('test_vocab', spanish_word=current_card[1]))
 
 
-@ask.intent("AnswerQuestionIntent", convert={"answer": str})
-def answer_question(answer):
+@ask.intent("AnswerQuestionIntent", convert={"answer_english": str})
+def answer_question(answer_english):
     current_card = session.attributes['current_card']
 
-    if current_card == None:
-        return render_question_template('no_question')
+    if current_card[0] == None:
+        return question(render_template('no_question'))
 
-    if answer != current_card:
-        increment_failure(current_card)
-        return render_question_template('wrong_answer',
+    if answer_english != current_card[0]:
+        increment_failure(current_card[0])
+        return question(render_template('wrong_answer',
                                         spanish_word=current_card[1],
-                                        english_word=current_card[0])
+                                        english_word=current_card[0]))
     else:
-        increment_success(current_card)
-        return render_question_template('correct_answer')
+        increment_success(current_card[0])
+        return question(render_template('correct_answer'))
 
 
 @ask.intent("AMAZON.FallbackIntent")
 def fallback():
-    return render_question_template('clarify')
+    return question(render_template('clarify'))
 
 
 ### Helper functions
@@ -99,14 +100,14 @@ def get_flashcard():
     return (english_word, spanish_word)
 
 
-def increment_success(flashcard):
-    session.attributes['statistics'][flashcard]['success'] += 1
-    session.attributes['statistics'][flashcard]['last_time_seen'] = str(datetime.now())
+def increment_success(flashcard_q):
+    session.attributes['statistics'][flashcard_q]['successes'] += 1
+    session.attributes['statistics'][flashcard_q]['last_time_seen'] = str(datetime.now())
 
 
-def increment_failure(flashcard):
-    session.attributes['statistics'][flashcard]['failure'] += 1
-    session.attributes['statistics'][flashcard]['last_time_seen'] = str(datetime.now())
+def increment_failure(flashcard_q):
+    session.attributes['statistics'][flashcard_q]['failures'] += 1
+    session.attributes['statistics'][flashcard_q]['last_time_seen'] = str(datetime.now())
 
 
 if __name__ == "__main__":

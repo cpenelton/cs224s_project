@@ -9,3 +9,5 @@ no_question: Whoops! There is currently no question to answer
 wrong answer: Close! The correct translation for {{spanish_word}} is {{english_word}}
 
 correct_answer: That is correct. Nice job!
+
+add_flashcard_complete: Great! I've added that flashcard. What would you like to do next?
