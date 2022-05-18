@@ -5,7 +5,13 @@ from datetime import datetime
 from flask import Flask, render_template
 from flask_ask import Ask, statement, question, session, request
 
-FLASHCARDS_FILENAME = "flashcards.csv"
+app = Flask(__name__)
+
+ask = Ask(app, "/")
+
+logging.getLogger("flask_ask").setLevel(logging.DEBUG)
+
+FLASHCARDS_FILENAME = "final_project_code/flashcards.csv"
 render_question_template = lambda x, *args: question(render_template(x, *args))
 
 
@@ -76,13 +82,13 @@ def initialize_flashcards(username):
 def initialize_statistics(username):
     statistics = {}
 
-    for key in session.attributes['flashcards'].keys:
+    for key in session.attributes['flashcards']:
         statistics[key] = {
             'successes': 0,
             'failures': 0,
-            'last_time_seen': datetime.max()
+            'last_time_seen': datetime.max
         }
-
+    print("STATISTICS: ", statistics)
     return statistics
 
 
@@ -105,7 +111,4 @@ def increment_failure(flashcard):
 
 
 if __name__ == "__main__":
-    app = Flask(__name__)
-    ask = Ask(app, "/")
-
-    logging.getLogger("flask_ask").setLevel(logging.DEBUG)
+    app.run(debug=True)
