@@ -25,7 +25,7 @@ def new_session():
 @ask.intent("LoginIntent", convert={"username": str})
 def login(username):
     session.attributes['flashcards'] = initialize_flashcards(username)
-    session.attribute['statistics'] = initialize_statistics(username)
+    session.attributes['statistics'] = initialize_statistics(username)
     return render_question_template('welcome')
 
 
@@ -44,7 +44,7 @@ def ask_question():
 
 @ask.intent("AnswerQuestionIntent", convert={"answer": str})
 def answer_question(answer):
-    current_card = session.attribute['current_card']
+    current_card = session.attributes['current_card']
 
     if current_card == None:
         return render_question_template('no_question')
@@ -88,7 +88,6 @@ def initialize_statistics(username):
             'failures': 0,
             'last_time_seen': datetime.max
         }
-    print("STATISTICS: ", statistics)
     return statistics
 
 
