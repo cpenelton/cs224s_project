@@ -18,8 +18,8 @@ def new_session():
 
 @ask.intent("LoginIntent", convert={"username": str})
 def login(username):
-    session.attributes['flashcards'] = get_flashcards(username)
-    session.attribute['successes'], session.attribute['failures'] = get_statistics(username)
+    session.attributes['flashcards'] = initialize_flashcards(username)
+    session.attribute['statistics'] = initialize_statistics(username)
     return render_question_template('welcome')
 
 
@@ -63,12 +63,10 @@ def fallback():
 # TODO: Get flashcards by username
 def initialize_flashcards(username):
     filename = FLASHCARDS_FILENAME
-
     flashcards = {}
 
     with open(filename) as csvfile:
         reader = csv.reader(csvfile)
-
         for row in reader:
             flashcards[row[0]] = row[1]
     return flashcards
@@ -82,28 +80,32 @@ def initialize_statistics(username):
         statistics[key] = {
             'successes': 0,
             'failures': 0,
-            'last_time_seen' = datetime.max()
+            'last_time_seen': datetime.max()
         }
 
-        return statistics
+    return statistics
 
-    # TODO: Weigh cards by success/failure rate
-    def get_flashcard():
-        english_word = random.choice(list(session.attributes['flashcards']))
-        spanish_word = session.attributes['flashcards'][english_word]
 
-        return (english_word, spanish_word)
+# TODO: Weigh cards by success/failure rate
+def get_flashcard():
+    english_word = random.choice(list(session.attributes['flashcards']))
+    spanish_word = session.attributes['flashcards'][english_word]
 
-    def increment_success(flashcard):
-        session.attributes['statistics'][flashcard]['success'] += 1
-        session.attributes['statistics'][flashcard]['last_time_seen'] = datetime.now()
+    return (english_word, spanish_word)
 
-    def increment_failure(flashcard):
-        session.attributes['statistics'][flashcard]['failure'] += 1
-        session.attributes['statistics'][flashcard]['last_time_seen'] = datetime.now()
 
-    if __name__ == "__main__":
-        app = Flask(__name__)
-        ask = Ask(app, "/")
+def increment_success(flashcard):
+    session.attributes['statistics'][flashcard]['success'] += 1
+    session.attributes['statistics'][flashcard]['last_time_seen'] = datetime.now()
 
-        logging.getLogger("flask_ask").setLevel(logging.DEBUG)
+
+def increment_failure(flashcard):
+    session.attributes['statistics'][flashcard]['failure'] += 1
+    session.attributes['statistics'][flashcard]['last_time_seen'] = datetime.now()
+
+
+if __name__ == "__main__":
+    app = Flask(__name__)
+    ask = Ask(app, "/")
+
+    logging.getLogger("flask_ask").setLevel(logging.DEBUG)

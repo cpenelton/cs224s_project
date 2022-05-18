@@ -1,0 +1,11 @@
+login: Welcome to the spanish learning bot! What is your name?
+
+welcome: Hello {{username}}, pleasure to meet you!
+
+test_vocab: What is {{spanish_word}} in English?
+
+no_question: Whoops! There is currently no question to answer
+
+wrong answer: Close! The correct translation for {{spanish_word}} is {{english_word}}
+
+correct_answer: That is correct. Nice job!
