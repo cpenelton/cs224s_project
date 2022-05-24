@@ -35,22 +35,47 @@ def add_flashcard(english_word, spanish_word):
     return question(render_template('add_flashcard_complete'))
 
 
-@ask.intent("AskQuestionIntent")
-def ask_question():
+@ask.intent("AskEnglishQuestionIntent")
+def ask_english_question():
     current_card = get_flashcard()
     session.attributes['current_card'] = current_card
 
     return question(render_template('test_vocab', spanish_word=current_card[1]))
 
 
-@ask.intent("AnswerQuestionIntent", convert={"answer_english": str})
-def answer_question(answer_english):
+@ask.intent("AskSpanishQuestionIntent")
+def ask_spanish_question():
+    current_card = get_flashcard()
+    session.attributes['current_card'] = current_card
+
+    return question(render_template('test_vocab', english_word=current_card[0]))
+
+
+@ask.intent("AnswerQuestionEnglishIntent", convert={"answer_english": str})
+def answer_question_english(answer_english):
     current_card = session.attributes['current_card']
 
     if current_card[0] == None:
         return question(render_template('no_question'))
 
     if answer_english != current_card[0]:
+        increment_failure(current_card[0])
+        return question(render_template('wrong_answer',
+                                        spanish_word=current_card[1],
+                                        english_word=current_card[0]))
+    else:
+        increment_success(current_card[0])
+        return question(render_template('correct_answer'))
+
+
+@ask.intent("AnswerQuestionSpanishIntent", convert={"answer_spanish": str})
+def answer_question_spanish(answer_spanish):
+    current_card = session.attributes['current_card']
+
+    if current_card[0] == None:
+        return question(render_template('no_question'))
+
+    if answer_spanish != current_card[1]:
         increment_failure(current_card[0])
         return question(render_template('wrong_answer',
                                         spanish_word=current_card[1],

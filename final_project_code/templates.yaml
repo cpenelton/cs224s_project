@@ -4,6 +4,8 @@ welcome: Hello {{username}}, pleasure to meet you! What would you like to do?
 
 test_vocab: What is {{spanish_word}} in English?
 
+test_spanish_vocab: Como se dice {{english_word}} en Espanol?
+
 no_question: Whoops! There is currently no question to answer
 
 wrong_answer: Close! The correct translation for {{spanish_word}} is {{english_word}}
