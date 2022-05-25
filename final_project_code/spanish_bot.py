@@ -36,6 +36,19 @@ def add_flashcard(english_word, spanish_word):
     return question(render_template('add_flashcard_complete'))
 
 
+@ask.intent("AskMenuIntent")
+def return_menu():
+    # TODO: TEST THIS functionality to add a flashcard to deck
+    return question(render_template('add_flashcard_complete'))
+
+
+@ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
+def add_flashcard(english_word, spanish_word):
+    # TODO: TEST THIS functionality to add a flashcard to deck
+    session.attributes['flashcards'][english_word] = [spanish_word]
+    return question(render_template('add_flashcard_complete'))
+
+
 @ask.intent("AskEnglishQuestionIntent")
 def ask_english_question():
     current_card = get_flashcard()

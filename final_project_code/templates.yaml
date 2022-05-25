@@ -2,9 +2,16 @@ login: Welcome to the spanish learning bot! What is your name?
 
 welcome: Hello {{username}}, pleasure to meet you! What would you like to do?
 
-test_vocab: What is {{spanish_word}} in English?
+test_vocab:
+  <speak>
+    What is <lang xml:lang="es-US">{{spanish_word}}</lang> in English?
+  </speak>
 
-test_spanish_vocab: Como se dice {{english_word}} en Espanol?
+
+test_spanish_vocab:
+  <speak>
+    Como se dice <lang xml:lang="en-US">{{english_word}}</lang> en Espanol?
+  </speak>
 
 no_question: Whoops! There is currently no question to answer
 
@@ -13,3 +20,10 @@ wrong_answer: Close! The correct translation for {{spanish_word}} is {{english_w
 correct_answer: That is correct. Nice job!
 
 add_flashcard_complete: Great! I've added that flashcard. What would you like to do next?
+
+return_menu_options:
+  You can add a flashcard to the deck, practice translating vocab from Spanish to English, 
+  or practice conversing entirely in Spanish. To add a card to the deck, say "add a flashcard for 
+  ENGLISH_WORD to SPANISH_WORD. To practice in English, say "Let's start practicing vocab in English. 
+  To practice in Spanish, say "let's practice vocab in Spanish" and switch the language to es-US.
+
