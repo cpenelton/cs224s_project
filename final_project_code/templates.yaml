@@ -10,7 +10,7 @@ test_vocab:
 
 test_spanish_vocab:
   <speak>
-    Como se dice <lang xml:lang="en-US">{{english_word}}</lang> en Espanol?
+    <lang xml:lang="es-US">Como se dice</lang> <lang xml:lang="en-US">{{english_word}}</lang> <lang xml:lang="es-US">en Espanol</lang>?
   </speak>
 
 no_question: Whoops! There is currently no question to answer
@@ -24,6 +24,6 @@ add_flashcard_complete: Great! I've added that flashcard. What would you like to
 return_menu_options:
   You can add a flashcard to the deck, practice translating vocab from Spanish to English, 
   or practice conversing entirely in Spanish. To add a card to the deck, say "add a flashcard for 
-  ENGLISH_WORD to SPANISH_WORD. To practice in English, say "Let's start practicing vocab in English. 
-  To practice in Spanish, say "let's practice vocab in Spanish" and switch the language to es-US.
+  ENGLISH_WORD to SPANISH_WORD. To practice in English, say "Let's start practicing vocab in English." 
+  To practice in Spanish, say "Let's practice vocab in Spanish" and switch the language to es-US.
 

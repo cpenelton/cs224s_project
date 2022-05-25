@@ -38,8 +38,7 @@ def add_flashcard(english_word, spanish_word):
 
 @ask.intent("AskMenuIntent")
 def return_menu():
-    # TODO: TEST THIS functionality to add a flashcard to deck
-    return question(render_template('add_flashcard_complete'))
+    return question(render_template('return_menu_options'))
 
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
@@ -90,6 +89,7 @@ def answer_question_spanish(answer_spanish):
         return question(render_template('no_question'))
 
     if answer_spanish != current_card[1]:
+        print("SPANISH ANSWER: ", answer_spanish)
         increment_failure(current_card[0])
         return question(render_template('wrong_answer',
                                         spanish_word=current_card[1],
