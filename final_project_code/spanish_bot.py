@@ -31,7 +31,8 @@ def login(username):
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
 def add_flashcard(english_word, spanish_word):
-    # TODO: function to add a flashcard to deck
+    # TODO: TEST THIS functionality to add a flashcard to deck
+    session.attributes['flashcards'][english_word] = [spanish_word]
     return question(render_template('add_flashcard_complete'))
 
 
@@ -48,7 +49,7 @@ def ask_spanish_question():
     current_card = get_flashcard()
     session.attributes['current_card'] = current_card
 
-    return question(render_template('test_vocab', english_word=current_card[0]))
+    return question(render_template('test_spanish_vocab', english_word=current_card[0]))
 
 
 @ask.intent("AnswerQuestionEnglishIntent", convert={"answer_english": str})
