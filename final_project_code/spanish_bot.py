@@ -12,6 +12,7 @@ ask = Ask(app, "/")
 logging.getLogger("flask_ask").setLevel(logging.DEBUG)
 
 FLASHCARDS_FILENAME = "final_project_code/flashcards.csv"
+USERS = set()
 render_question_template = lambda x, *args: question(render_template(x, *args))
 
 
@@ -24,17 +25,23 @@ def new_session():
 
 @ask.intent("LoginIntent", convert={"username": str})
 def login(username):
-    session.attributes['flashcards'] = initialize_flashcards(username)
-    session.attributes['statistics'] = initialize_statistics(username)
+
     session.attributes['user']['name'] = username
     # TODO: give a summary of progress if an old user
-    template_welcome = 'new_user_welcome'
-    template_welcome = 'old_user_welcome'
+
+    if username not in USERS:
+        template_welcome = 'new_user_welcome'
+        session.attributes['flashcards'] = initialize_flashcards(username)
+        session.attributes['statistics'] = initialize_statistics(username)
+    else:
+        template_welcome = 'old_user_welcome'
+        session.attributes['flashcards'] = get_flashcards(username)
+        session.attributes['statistics'] = get_statistics(username)
     return question(render_template(template_welcome, username=username))
 
 
 @ask.intent("SetLearningPrefsIntent", convert={"practice_cadence": int})
-def login(practice_cadence):
+def set_learning_prefs(practice_cadence):
     session.attributes['user']['practice_cadence'] = practice_cadence
     return question(render_template("user_preference_confirmation", practice_cadence=practice_cadence))
 
@@ -51,18 +58,10 @@ def return_menu():
     return question(render_template('return_menu_options'))
 
 
-@ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
-def add_flashcard(english_word, spanish_word):
-    # TODO: TEST THIS functionality to add a flashcard to deck
-    session.attributes['flashcards'][english_word] = [spanish_word]
-    return question(render_template('add_flashcard_complete'))
-
-
 @ask.intent("AskEnglishQuestionIntent")
 def ask_english_question():
     current_card = get_flashcard()
     session.attributes['current_card'] = current_card
-
     return question(render_template('test_vocab', spanish_word=current_card[1]))
 
 
@@ -70,7 +69,6 @@ def ask_english_question():
 def ask_spanish_question():
     current_card = get_flashcard()
     session.attributes['current_card'] = current_card
-
     return question(render_template('test_spanish_vocab', english_word=current_card[0]))
 
 
@@ -116,7 +114,6 @@ def fallback():
 
 ### Helper functions
 
-# TODO: Get flashcards by username
 def initialize_flashcards(username):
     filename = FLASHCARDS_FILENAME
     flashcards = {}
@@ -128,7 +125,6 @@ def initialize_flashcards(username):
     return flashcards
 
 
-# TODO: get statistics by username
 def initialize_statistics(username):
     statistics = {}
 
@@ -138,6 +134,20 @@ def initialize_statistics(username):
             'failures': 0,
             'last_time_seen': str(datetime.max)
         }
+    return statistics
+
+
+# TODO: Get flashcards by username
+def get_flashcards(username):
+    flashcards = {}
+    # TODO: pull data from database system
+    return flashcards
+
+
+# TODO: get statistics by username
+def get_statistics(username):
+    statistics = {}
+    # TODO: pull data from database system
     return statistics
 
 
