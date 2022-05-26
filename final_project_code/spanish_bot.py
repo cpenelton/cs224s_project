@@ -27,7 +27,6 @@ def new_session():
 def login(username):
 
     session.attributes['user']['name'] = username
-    # TODO: give a summary of progress if an old user
 
     if username not in USERS:
         template_welcome = 'new_user_welcome'
@@ -37,6 +36,7 @@ def login(username):
         template_welcome = 'old_user_welcome'
         session.attributes['flashcards'] = get_flashcards(username)
         session.attributes['statistics'] = get_statistics(username)
+        # TODO: give a summary of progress if an old user
     return question(render_template(template_welcome, username=username))
 
 
