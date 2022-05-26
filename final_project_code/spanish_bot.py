@@ -26,7 +26,17 @@ def new_session():
 def login(username):
     session.attributes['flashcards'] = initialize_flashcards(username)
     session.attributes['statistics'] = initialize_statistics(username)
-    return question(render_template('welcome', username=username))
+    session.attributes['user']['name'] = username
+    # TODO: give a summary of progress if an old user
+    template_welcome = 'new_user_welcome'
+    template_welcome = 'old_user_welcome'
+    return question(render_template(template_welcome, username=username))
+
+
+@ask.intent("SetLearningPrefsIntent", convert={"practice_cadence": int})
+def login(practice_cadence):
+    session.attributes['user']['practice_cadence'] = practice_cadence
+    return question(render_template("user_preference_confirmation", practice_cadence=practice_cadence))
 
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
