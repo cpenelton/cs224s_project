@@ -14,14 +14,13 @@ logging.getLogger("flask_ask").setLevel(logging.DEBUG)
 FLASHCARDS_FILENAME = "flashcards.csv"
 #FLASHCARDS_FILENAME = "final_project_code/flashcards.csv"
 render_question_template = lambda x, *args: question(render_template(x, *args))
-default_rate = '100%'
 
 ### Intents
 
 @ask.launch
 def new_session():
     session.attributes['current_message'] = 'login' # save the template name to use for repeating the phrase
-    return question(render_template('login',rate=default_rate))
+    return question(render_template('login'))
 
 
 @ask.intent("LoginIntent", convert={"username": str})
@@ -31,8 +30,7 @@ def login(username):
     session.attributes['username'] = username
     session.attributes['current_message'] = 'welcome'
     return question(render_template('welcome',
-                                    username=username,
-                                    rate=default_rate))
+                                    username=username))
 
 """
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
@@ -47,8 +45,7 @@ def ask_question():
     session.attributes['current_card'] = current_card
     session.attributes['current_message'] = 'test_vocab'
     return question(render_template('test_vocab',
-                                    english_word=current_card[0],
-                                    rate=default_rate))
+                                    english_word=current_card[0]))
 
 
 @ask.intent("AnswerVocabQuestionIntent", convert={"vocab_word": str})
@@ -56,21 +53,18 @@ def answer_question(vocab_word):
     current_card = session.attributes['current_card']
     if current_card[0] == None:
         session.attributes['current_message'] = 'no_question'
-        return question(render_template('no_question',
-                                        rate=default_rate))
+        return question(render_template('no_question'))
 
     if vocab_word != current_card[1]:
         increment_failure(current_card[1])
         session.attributes['current_message'] = 'wrong_answer'
         return question(render_template('wrong_answer',
                                         spanish_word=current_card[1],
-                                        english_word=current_card[0],
-                                        rate=default_rate))
+                                        english_word=current_card[0]))
     else:
         increment_success(current_card[0])
         session.attributes['current_message'] = 'correct_answer'
-        return question(render_template('correct_answer',
-                                        rate=default_rate))
+        return question(render_template('correct_answer'))
 
 @ask.intent("InEnglishIntent")
 def repeat():
@@ -81,52 +75,43 @@ def repeat():
         current_card = session.attributes['current_card']
         return question(render_template(message,
                                         spanish_word=current_card[1],
-                                        english_word=current_card[0],
-                                        rate=default_rate))
+                                        english_word=current_card[0]))
     if message == 'test_vocab'+'_en':
         current_card = session.attributes['current_card']
         return question(render_template(message,
-                                        english_word=current_card[0],
-                                        rate=default_rate))
+                                        english_word=current_card[0]))
 
     # collect the user name if we repeat welcome message
     if message == 'welcome'+'_en':
         username = session.attributes['username']
         return question(render_template(message,
-                                        username=username,
-                                        rate=default_rate))
+                                        username=username))
 
     # IF Alexa's response does not need to pass in template information, just pass in the message with _en added
-    return question(render_template(message,
-                                    rate=default_rate))
+    return question(render_template(message))
 
 @ask.intent("RepeatIntent")
 def repeat():
     message = session.attributes['current_message']
-    rate = 'slow' # saying things more slowly now
     # we need to collect the vocab words if we are repeating a vocab question
     if message == 'wrong_answer':
         current_card = session.attributes['current_card']
         return question(render_template(message,
                                         spanish_word=current_card[1],
-                                        english_word=current_card[0],
-                                        rate=rate))
+                                        english_word=current_card[0]))
     if message == 'test_vocab':
         current_card = session.attributes['current_card']
         return question(render_template(message,
-                                        english_word=current_card[0],
-                                        rate=rate))
+                                        english_word=current_card[0]))
 
     # collect the user name if we repeat welcome message
     if message == 'welcome':
         username = session.attributes['username']
         return question(render_template(message,
-                                        username=username,
-                                        rate=rate))
+                                        username=username))
 
     # IF Alexa's response does not need to pas in template information, just pass in the message with _en added
-    return question(render_template(message,
-                                    rate=rate))
+    return question(render_template(message))
 
 @ask.intent("AMAZON.FallbackIntent")
 def fallback():
