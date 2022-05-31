@@ -1,4 +1,5 @@
 import csv
+import pymysql
 import logging
 import random
 from datetime import datetime
