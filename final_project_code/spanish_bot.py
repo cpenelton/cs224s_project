@@ -11,7 +11,7 @@ ask = Ask(app, "/")
 
 logging.getLogger("flask_ask").setLevel(logging.DEBUG)
 
-FLASHCARDS_FILENAME = "final_project_code/flashcards.csv"
+FLASHCARDS_FILENAME = "final_project_code/small_flashcards.csv"
 render_question_template = lambda x, *args: question(render_template(x, *args))
 
 
