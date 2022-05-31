@@ -1,0 +1,20 @@
+login: <speak> Hola. Me llamo Alejandra. Estoy aquí para practicar Español contigo. Como te llamas? </speak>
+login_en: <speak><lang xml:lang="en-US"> Hello. My name is Alejandra. I'm here to practice Spanish with you. What's your name? </lang></speak>
+
+welcome: <speak> Hola {{username}}. Mucho gusto! ¿Qué te gustaría practicar?  </speak>
+welcome_en: <speak><lang xml:lang="en-US"> Hi {{username}}. Nice to meet you. What would you like to practice?</lang></speak>
+
+test_vocab: <speak> Como se dice <lang xml:lang="en-US">{{english_word}}</lang> en Español? </speak>
+test_vocab_en: <speak><lang xml:lang="en-US">How do you say {{english_word}} in Spanish?</lang></speak>
+
+no_question: <speak> ¡Oh, no! No hay ninguna pregunta para responder. </speak>
+no_question_en: <speak><lang xml:lang="en-US"> Oh no! There is currently no question to answer </lang></speak>
+
+wrong_answer: <speak> Muy cerca, pero la respuesta corecta es {{spanish_word}} </speak>
+wrong_answer_en: <speak><lang xml:lang="en-US"> Close! The correct response is </lang> {{spanish_word}} </speak>
+
+correct_answer: <speak> Cierto. Muy Bien! </speak>
+correct_answer_en: <speak><lang xml:lang="en-US"> That is correct. Very good! </lang></speak>
+
+add_flashcard_complete: <speak> ¡Estupendo! He añadido esa tarjeta. Que te gustaría hacer después? </speak>
+add_flashcard_complete_en: <speak><lang xml:lang="en-US"> Great! I've added that flashcard. What would you like to do next?</lang></speak>
