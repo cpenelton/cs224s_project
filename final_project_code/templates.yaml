@@ -6,9 +6,10 @@ new_user_welcome:
   Hello {{username}}, pleasure to meet you! My name is Alejandra, your friendly Spanish learning bot.
   Let's get started with your learning preferences. How many cards per day would you like to practice?
 
-old_user_welcome: Welcome back {{username}}, nice to see you again! What would you like to do?
+old_user_welcome: Welcome back {{username}}, nice to see you again! You have currently practiced {{num_cards}}, 
+  and have {{num_successes}} correct answers and {{num_fails}} incorrect answers. Nice progress! What would you like to do today?
 
-user_preference_confirmation: Great! I have to set up to practice {{practice_cadence}} flashcards per day.
+user_preference_confirmation: Great! I am set up to practice {{practice_cadence}} flashcards per day with you.
 
 test_vocab:
   <speak>
@@ -33,5 +34,5 @@ return_menu_options:
   You can add a flashcard to the deck, practice translating vocab from Spanish to English, 
   or practice conversing entirely in Spanish. To add a card to the deck, say "add a flashcard for 
   ENGLISH_WORD to SPANISH_WORD. To practice in English, say "Let's start practicing vocab in English." 
-  To practice in Spanish, say "Let's practice vocab in Spanish" and switch the language to es-US.
+  To practice in Spanish use the Spanish virtual assistant Alejandra!
 

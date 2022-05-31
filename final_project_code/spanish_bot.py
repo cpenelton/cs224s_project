@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 from flask import Flask, render_template
 from flask_ask import Ask, statement, question, session, request
+from database_access import *
 
 app = Flask(__name__)
 
@@ -28,28 +29,30 @@ def new_session():
 def login(username):
 
     session.attributes['user']['name'] = username
+    user_in_db = get_user_by_name(username)
 
-    if username not in USERS:
+    if not user_in_db:
         template_welcome = 'new_user_welcome'
-        session.attributes['flashcards'] = initialize_flashcards(username)
-        session.attributes['statistics'] = initialize_statistics(username)
+        return_statement = render_template(template_welcome, username=username)
     else:
         template_welcome = 'old_user_welcome'
-        session.attributes['flashcards'] = get_flashcards(username)
-        session.attributes['statistics'] = get_statistics(username)
-        # TODO: give a summary of progress if an old user
-    return question(render_template(template_welcome, username=username))
+        num_cards = user_in_db['number_of_cards']
+        num_fails = user_in_db['total_failures']
+        num_successes = user_in_db['total_successes']
+        return_statement = render_template(template_welcome, username=username, num_cards=num_cards, num_fails=num_fails, num_successes=num_successes)
+    return question(return_statement)
 
 
 @ask.intent("SetLearningPrefsIntent", convert={"practice_cadence": int})
 def set_learning_prefs(practice_cadence):
-    session.attributes['user']['practice_cadence'] = practice_cadence
+    insert_user(session.attributes['user']['name'], practice_cadence)
     return question(render_template("user_preference_confirmation", practice_cadence=practice_cadence))
 
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
 def add_flashcard(english_word, spanish_word):
     # TODO: TEST THIS functionality to add a flashcard to deck
+    # insert_card(cursor, user_id, source, translation)
     session.attributes['flashcards'][english_word] = [spanish_word]
     return question(render_template('add_flashcard_complete'))
 
@@ -118,11 +121,7 @@ def fallback():
 def initialize_flashcards(username):
     filename = FLASHCARDS_FILENAME
     flashcards = {}
-
-    with open(filename) as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            flashcards[row[0]] = row[1]
+    # TODO: initialize flashcards table as needed in backend db -- is this already done?
     return flashcards
 
 
@@ -141,20 +140,28 @@ def initialize_statistics(username):
 # TODO: Get flashcards by username
 def get_flashcards(username):
     flashcards = {}
-    # TODO: pull data from database system
+    name = "Daniel"
+    connection = get_connection()
+
+    with connection:
+        with connection.cursor() as cursor:
+            user_id = get_user_by_name(username)['user_id']
+            flashcards = get_all_flashcards_for_users(user_id=user_id)
     return flashcards
 
 
 # TODO: get statistics by username
-def get_statistics(username):
+def get_summary_statistics(username):
     statistics = {}
-    # TODO: pull data from database system
+    statistics = get_user_by_name(username)
     return statistics
 
 
 # TODO: Weigh cards by success/failure rate
 def get_flashcard():
-    english_word = random.choice(list(session.attributes['flashcards']))
+    flashcards = get_flashcards(session.attributes['username'])
+    id = random.choice(list(flashcards))
+    english_word = random.choice(list(flashcards))
     spanish_word = session.attributes['flashcards'][english_word]
 
     return (english_word, spanish_word)
