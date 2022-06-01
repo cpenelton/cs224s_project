@@ -5,8 +5,8 @@ import random
 from datetime import datetime
 from flask import Flask, render_template
 from flask_ask import Ask, statement, question, session, request
-from database_access import *
-
+#from database_access import *
+import database_access
 app = Flask(__name__)
 
 ask = Ask(app, "/")
@@ -28,8 +28,11 @@ def new_session():
 @ask.intent("LoginIntent", convert={"username": str})
 def login(username):
 
-    session.attributes['user']['name'] = username
-    user_in_db = get_user_by_name(username)
+    session.attributes['username']= username
+    connection = database_access.get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            user_in_db = database_access.get_user_by_name(cursor, username)
 
     if not user_in_db:
         template_welcome = 'new_user_welcome'
@@ -39,21 +42,21 @@ def login(username):
         num_cards = user_in_db['number_of_cards']
         num_fails = user_in_db['total_failures']
         num_successes = user_in_db['total_successes']
-        return_statement = render_template(template_welcome, username=username, num_cards=num_cards, num_fails=num_fails, num_successes=num_successes)
+        return_statement = render_template(template_welcome, username=username,
+                                           num_cards=num_cards, num_fails=num_fails,
+                                           num_successes=num_successes)
     return question(return_statement)
 
 
 @ask.intent("SetLearningPrefsIntent", convert={"practice_cadence": int})
-def set_learning_prefs(practice_cadence):
-    insert_user(session.attributes['user']['name'], practice_cadence)
+def setup_new_user(practice_cadence):
+    initialize_flashcards(session.attributes['username'], practice_cadence)
     return question(render_template("user_preference_confirmation", practice_cadence=practice_cadence))
 
 
 @ask.intent("AddFlashcardIntent", convert={"english_word": str, "spanish_word": str})
 def add_flashcard(english_word, spanish_word):
-    # TODO: TEST THIS functionality to add a flashcard to deck
-    # insert_card(cursor, user_id, source, translation)
-    session.attributes['flashcards'][english_word] = [spanish_word]
+    add_flashcard_to_deck(english_word, spanish_word)
     return question(render_template('add_flashcard_complete'))
 
 
@@ -65,49 +68,49 @@ def return_menu():
 @ask.intent("AskEnglishQuestionIntent")
 def ask_english_question():
     current_card = get_flashcard()
-    session.attributes['current_card'] = current_card
     return question(render_template('test_vocab', spanish_word=current_card[1]))
 
 
 @ask.intent("AskSpanishQuestionIntent")
 def ask_spanish_question():
     current_card = get_flashcard()
-    session.attributes['current_card'] = current_card
     return question(render_template('test_spanish_vocab', english_word=current_card[0]))
 
 
 @ask.intent("AnswerQuestionEnglishIntent", convert={"answer_english": str})
 def answer_question_english(answer_english):
-    current_card = session.attributes['current_card']
+    english_word = session.attributes['english_word']
+    spanish_word = session.attributes['spanish_word']
 
-    if current_card[0] == None:
+    if english_word == None:
         return question(render_template('no_question'))
 
-    if answer_english != current_card[0]:
-        increment_failure(current_card[0])
+    if answer_english != english_word:
+        increment_failure(english_word)
         return question(render_template('wrong_answer',
-                                        spanish_word=current_card[1],
-                                        english_word=current_card[0]))
+                                        spanish_word=spanish_word,
+                                        english_word=english_word))
     else:
-        increment_success(current_card[0])
+        increment_success(english_word)
         return question(render_template('correct_answer'))
 
 
 @ask.intent("AnswerQuestionSpanishIntent", convert={"answer_spanish": str})
 def answer_question_spanish(answer_spanish):
-    current_card = session.attributes['current_card']
+    english_word = session.attributes['english_word']
+    spanish_word = session.attributes['spanish_word']
 
-    if current_card[0] == None:
+    if english_word == None:
         return question(render_template('no_question'))
 
-    if answer_spanish != current_card[1]:
+    if answer_spanish != spanish_word:
         print("SPANISH ANSWER: ", answer_spanish)
-        increment_failure(current_card[0])
+        increment_failure(english_word)
         return question(render_template('wrong_answer',
-                                        spanish_word=current_card[1],
-                                        english_word=current_card[0]))
+                                        spanish_word=spanish_word,
+                                        english_word=english_word))
     else:
-        increment_success(current_card[0])
+        increment_success(english_word)
         return question(render_template('correct_answer'))
 
 
@@ -118,63 +121,73 @@ def fallback():
 
 ### Helper functions
 
-def initialize_flashcards(username):
-    filename = FLASHCARDS_FILENAME
-    flashcards = {}
-    # TODO: initialize flashcards table as needed in backend db -- is this already done?
-    return flashcards
-
-
-def initialize_statistics(username):
-    statistics = {}
-
-    for key in session.attributes['flashcards']:
-        statistics[key] = {
-            'successes': 0,
-            'failures': 0,
-            'last_time_seen': str(datetime.max)
-        }
-    return statistics
-
-
-# TODO: Get flashcards by username
-def get_flashcards(username):
-    flashcards = {}
-    name = "Daniel"
-    connection = get_connection()
-
+def get_user_id(username):
+    connection = database_access.get_connection()
     with connection:
         with connection.cursor() as cursor:
-            user_id = get_user_by_name(username)['user_id']
-            flashcards = get_all_flashcards_for_users(user_id=user_id)
+            user_id = database_access.get_user_by_name(cursor, username)['id']
+    return user_id
+
+
+def initialize_flashcards(username, practice_cadence):
+    connection = database_access.get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            database_access.insert_user(cursor, username, practice_cadence)
+            user_id = database_access.get_user_by_name(cursor, username)['id']
+            database_access.insert_csv_into_flashcards(cursor, user_id, FLASHCARDS_FILENAME)
+    return
+
+
+def add_flashcard_to_deck(english_word, spanish_word):
+    connection = database_access.get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            database_access.insert_card(cursor, session.attributes['user_id'],
+                                        english_word, spanish_word)
+    return
+
+
+def get_flashcards(username):
+    flashcards = {}
+    connection = database_access.get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            user_id = database_access.get_user_by_name(cursor, username)['user_id']
+            flashcards = database_access.get_all_flashcards_for_users(cursor, user_id=user_id)
     return flashcards
 
 
 # TODO: get statistics by username
 def get_summary_statistics(username):
     statistics = {}
-    statistics = get_user_by_name(username)
+    statistics = database_access.get_user_by_name(username)
     return statistics
 
 
 # TODO: Weigh cards by success/failure rate
 def get_flashcard():
     flashcards = get_flashcards(session.attributes['username'])
-    id = random.choice(list(flashcards))
-    english_word = random.choice(list(flashcards))
-    spanish_word = session.attributes['flashcards'][english_word]
-
-    return (english_word, spanish_word)
-
-
-def increment_success(flashcard_q):
-    session.attributes['statistics'][flashcard_q]['successes'] += 1
-    session.attributes['statistics'][flashcard_q]['last_time_seen'] = str(datetime.now())
+    flashcard = random.choice(flashcards)
+    session.attributes['flashcard_id'] = flashcard['id']
+    session.attributes['english_word'] = flashcard['source']
+    session.attributes['spanish_word'] = flashcard['translation']
+    return (session.attributes['english_word'], session.attributes['spanish_word'])
 
 
-def increment_failure(flashcard_q):
-    session.attributes['statistics'][flashcard_q]['failures'] += 1
-    session.attributes['statistics'][flashcard_q]['last_time_seen'] = str(datetime.now())
+def increment_success(flashcard_id):
+    connection = database_access.get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            database_access.increment_card_success(cursor, flashcard_id)
+
+
+
+def increment_failure(flashcard_id):
+    connection = database_access.get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            database_access.increment_card_failure(cursor, flashcard_id)
 
 
 if __name__ == "__main__":
