@@ -3,3 +3,4 @@ __MACOSX/
 .idea/
 .bash_history
 *.DS_Store
+__pycache__/
