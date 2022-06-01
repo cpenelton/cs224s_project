@@ -1,5 +1,4 @@
 import csv
-import pymysql
 import logging
 import random
 from datetime import datetime
@@ -27,7 +26,7 @@ def new_session():
 @ask.intent("LoginIntent", convert={"username": str})
 def login(username):
 
-    session.attributes['user']['name'] = username
+    session.attributes['user'] = username
 
     if username not in USERS:
         template_welcome = 'new_user_welcome'
@@ -43,7 +42,7 @@ def login(username):
 
 @ask.intent("SetLearningPrefsIntent", convert={"practice_cadence": int})
 def set_learning_prefs(practice_cadence):
-    session.attributes['user']['practice_cadence'] = practice_cadence
+    session.attributes['practice_cadence'] = practice_cadence
     return question(render_template("user_preference_confirmation", practice_cadence=practice_cadence))
 
 
