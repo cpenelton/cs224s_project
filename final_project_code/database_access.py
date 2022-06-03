@@ -17,11 +17,11 @@ create_user_settings_table = """CREATE TABLE users
 create_flashcards_table = """CREATE TABLE flashcards
     (id int NOT NULL AUTO_INCREMENT,
     user_id int NOT NULL,
-    source varchar(255) NOT NULL UNIQUE,
+    source varchar(255) NOT NULL,
     translation varchar(255) NOT NULL,
-    successes int NOT NULL,
-    failures int NOT NULL,
-    last_time_seen timestamp NOT NULL,
+    n int NOT NULL,
+    ef float NOT NULL,
+    i int NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 )"""
@@ -41,77 +41,107 @@ def get_current_timestamp():
     ts = time.time()
     return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-def drop_table(cursor, table):
-    sql = "DROP TABLE IF EXISTS " + table
-    cursor.execute(sql)
+def drop_table(table):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "DROP TABLE IF EXISTS " + table
+            cursor.execute(sql)
 
-def reset_db(cursor):
-    drop_table("flashcards")
-    drop_table("users")
-    cursor.execute(create_user_settings_table)
-    cursor.execute(create_flashcards_table)    
+def reset_db():
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            drop_table("flashcards")
+            drop_table("users")
+            cursor.execute(create_user_settings_table)
+            cursor.execute(create_flashcards_table)
+    
 
 ## GETS
 
-def get_user(cursor, user_id):
-    sql = "SELECT * FROM users WHERE id = %s"
-    cursor.execute(sql, (user_id))
-    user = cursor.fetchone()
-    return user
+def get_user(user_id):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM users WHERE id = %s"
+            cursor.execute(sql, (user_id))
+            user = cursor.fetchone()
+            return user
 
-def get_user_by_name(cursor, name):
-    sql = "SELECT * FROM users WHERE name = %s"
-    cursor.execute(sql, (name))
-    user = cursor.fetchone()
-    return user
+def get_user_by_name(name):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM users WHERE name = %s"
+            cursor.execute(sql, (name))
+            user = cursor.fetchone()
+            print("THE USER HERE IS", user)
+            return user
 
-def get_flashcard(cursor, flashcard_id):
-    sql = "SELECT * FROM flashcards WHERE id = %s"
-    cursor.execute(sql, (flashcard_id))
-    flashcard = cursor.fetchone()
-    return flashcard
+def get_flashcard(flashcard_id):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM flashcards WHERE id = %s"
+            cursor.execute(sql, (flashcard_id))
+            flashcard = cursor.fetchone()
+            return flashcard
 
-def get_flashcard_by_user_source(cursor, user_id, source):
-    sql = "SELECT * FROM flashcards WHERE user_id = %s AND source = %s"
-    cursor.execute(sql, (user_id, source))
-    flashcard = cursor.fetchone()
-    return flashcard
+def get_flashcard_by_user_source(user_id, source):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM flashcards WHERE user_id = %s AND source = %s"
+            cursor.execute(sql, (user_id, source))
+            flashcard = cursor.fetchone()
+            return flashcard
 
-def get_all_flashcards_for_users(cursor, user_id):
-    user = get_user(cursor, user_id)
-    size = int(user['number_of_cards'])
+def get_all_flashcards_for_users(user_id):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            user = get_user(user_id)
+            size = int(user['number_of_cards'])
 
-    sql = "SELECT * FROM flashcards WHERE user_id = %s"
-    cursor.execute(sql, (user_id))
-    flashcards = cursor.fetchmany(size=size)
-    return flashcards
+            sql = "SELECT * FROM flashcards WHERE user_id = %s"
+            cursor.execute(sql, (user_id))
+            flashcards = cursor.fetchall()
+            return flashcards
 
 ## INSERTS
 
-def insert_csv_into_flashcards(cursor, user_id, file):
-     with open(file) as csvfile:
-        csvreader = csv.reader(csvfile)
+def insert_csv_into_flashcards(user_id, file):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            with open(file) as csvfile:
+                csvreader = csv.reader(csvfile)
 
-        for row in csvreader:
-            source, translation = row[0], row[1]
-            insert_card(cursor, user_id, source, translation)
+                for row in csvreader:
+                    source, translation = row[0], row[1]
+                    insert_card(user_id, source, translation)
 
-def insert_card(cursor, user_id, source, translation):
+def insert_card(user_id, source, translation):
     sql = """INSERT INTO `flashcards`
         (`user_id`,
         `source`,
         `translation`,
-        `successes`,
-        `failures`,
-        `last_time_seen`
+        `n`,
+        `ef`,
+        `i`
         )
         VALUES (%s, %s, %s, %s, %s, %s)"""
     
-    timestamp = get_current_timestamp()
-    cursor.execute(sql, (user_id, source, translation, 0, 0, timestamp))
-    print(user_id, source, translation)
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (user_id, source, translation, 0, 2.5, 0))
+            print(user_id, source, translation)
+            connection.commit()
+    
 
-def insert_user(cursor, name, number_of_cards):
+def insert_user(name, number_of_cards):
     sql = """INSERT INTO `users`
         (`name`,
         `number_of_cards`,
@@ -121,77 +151,81 @@ def insert_user(cursor, name, number_of_cards):
         `total_failures`)
         VALUES (%s, %s, %s, %s, %s, %s)"""
     
-    timestamp = get_current_timestamp()
-    cursor.execute(sql, (name, number_of_cards, timestamp, 0, 0, 0))
-    print(name, number_of_cards)
-
-# UPDATES
-def increment_card_success(cursor, flashcard_id):
-    sql = "UPDATE `flashcards` SET `successes` = `successes` + 1 WHERE id = %s"
-    flashcard = cursor.execute(sql, (flashcard_id))
-    return flashcard
-
-def increment_card_failure(cursor, flashcard_id):
-    sql = "UPDATE `flashcards` SET `failures` = `failures` + 1 WHERE id = %s"
-    flashcard = cursor.execute(sql, (flashcard_id))
-    return flashcard
-
-def set_user_failures(cursor, user_id, failures):
-    sql = "UPDATE `users` SET `total_failures` = %s WHERE id = %s"
-    flashcard = cursor.execute(sql, (failures, user_id))
-    return flashcard
-
-def set_user_successes(cursor, user_id, successes):
-    sql = "UPDATE `users` SET `total_successes` = %s WHERE id = %s"
-    flashcard = cursor.execute(sql, (successes, user_id))
-    return flashcard
-
-def set_user_card_number(cursor, user_id, card_number):
-    sql = "UPDATE `users` SET `number_of_cards` = %s WHERE id = %s"
-    flashcard = cursor.execute(sql, (card_number, user_id))
-    return flashcard
-
-if __name__ == '__main__':
-    name = "Daniel"
     connection = get_connection()
-
     with connection:
         with connection.cursor() as cursor:
+            timestamp = get_current_timestamp()
+            cursor.execute(sql, (name, number_of_cards, timestamp, 0, 0, 0))
+            print(name, number_of_cards)
+            connection.commit()
 
-            ## SANITY CHECKS ##
+# UPDATES
+def set_sm_2_vals(flashcard_id, n, ef, i):
+    sql = """UPDATE `flashcards`
+            SET n=%s, ef=%s, i=%s
+            WHERE id = %s"""
 
-            reset_db(cursor)
-            insert_user(cursor, name, 20)
-            insert_csv_into_flashcards(cursor, 1, "small_flashcards.csv")
+    print(n, ef, i, flashcard_id)
 
-            user = get_user_by_name(cursor, name)
-            user_id = user['id']
-
-            print(name + "'s cards:")
-            print(user)
-            print(get_all_flashcards_for_users(cursor, user_id))
-            print("\n\n\n")
-
-
-            flashcard = get_flashcard_by_user_source(cursor, user_id, 'temperature')
-            flashcard_id = flashcard['id']
-
-            print("Before update:")
-            print(flashcard)
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            flashcard = cursor.execute(sql, (n, ef, i, flashcard_id))
+            connection.commit()
             
-            increment_card_success(cursor, flashcard_id)
-            increment_card_failure(cursor, flashcard_id)
+            return flashcard
 
-            print("After update:")
-            print(get_flashcard_by_user_source(cursor, user_id, 'temperature'))
-            print("\n\n\n")
-            
+def set_user_failures(user_id, failures):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "UPDATE `users` SET total_failures= %s WHERE id = %s"
+            flashcard = cursor.execute(sql, (failures, user_id))
+            connection.commit()
 
-            print("Before user update:")
-            print(get_user(cursor, user_id))
-            
-            set_user_failures(cursor, user_id, 100)
-            set_user_successes(cursor, user_id, 100)
+            return flashcard
 
-            print("After user update:")
-            print(get_user(cursor, user_id))
+def set_user_successes(user_id, successes):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "UPDATE `users` SET total_successes= %s WHERE id = %s"
+            flashcard = cursor.execute(sql, (successes, user_id))
+            connection.commit()
+
+            return flashcard
+
+def set_user_card_number(user_id, card_number):
+    connection = get_connection()
+    with connection:
+        with connection.cursor() as cursor:
+            sql = "UPDATE `users` SET number_of_cards= %s WHERE id = %s"
+            flashcard = cursor.execute(sql, (card_number, user_id))
+            connection.commit()
+
+            return flashcard
+
+if __name__ == '__main__':
+
+    set_sm_2_vals(1, 2, 3, 8)
+    # reset_db()
+    # name = "Missingno"
+    # insert_user(name, 20)
+
+    # user = get_user_by_name(name)
+    # user_id = user['id']
+    # print(user['id'])
+
+    # insert_csv_into_flashcards(user_id, "small_flashcards.csv")
+
+    # print(name + "'s cards:")
+    # print(user)
+    # print(get_all_flashcards_for_users(user_id))
+    # print("\n\n\n")
+
+    # connection = get_connection()
+    # with connection:
+    #     with connection.cursor() as cursor:
+    #         sql = "SELECT * FROM users"
+    #         cursor.execute(sql)
+    #         print(cursor.fetchall())
