@@ -56,7 +56,7 @@ def answer_question(vocab_word):
         return question(render_template('no_question'))
 
     if vocab_word != current_card[1]:
-        increment_failure(current_card[1])
+        increment_failure(current_card[0])
         session.attributes['current_message'] = 'wrong_answer'
         return question(render_template('wrong_answer',
                                         spanish_word=current_card[1],
@@ -69,7 +69,7 @@ def answer_question(vocab_word):
 @ask.intent("InEnglishIntent")
 def repeat():
     message = session.attributes['current_message']+'_en'
-
+    current_card = session.attributes['current_card']
     # we need to collect the vocab words if we are repeating a vocab question
     if message == 'wrong_answer'+'_en':
         current_card = session.attributes['current_card']
